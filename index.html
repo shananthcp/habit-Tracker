@@ -1,272 +1,180 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pastel Habit Tracker & Daily To-Do</title>
-  
-  <!-- Google Fonts: Playfair Display (Serif) & Plus Jakarta Sans -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/style.css">
-  
-  <!-- Web App Manifest for Mobile PWA (Add to Home Screen) -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#FDFBF7">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
-</head>
-<body>
-
-  <!-- Top Application Header -->
-  <header class="app-header">
-    <div class="header-container">
-      <div class="brand-wrapper">
-        <span class="brand-title">Habit Tracker</span>
-        <span class="brand-subtitle">Pastel Aesthetic</span>
-      </div>
-
-      <div class="header-actions">
-        <!-- Live Sync Status Indicator -->
-        <div class="sync-status-badge" id="sync-status-indicator" title="Sync Status">
-          <span class="sync-dot online"></span>
-          <span>Connecting...</span>
-        </div>
-
-        <!-- Mobile & Laptop Sync Button -->
-        <button class="btn-header-action" id="btn-open-sync" title="Sync between mobile and laptop">
-          <span>📱 Mobile Sync</span>
-        </button>
-
-        <!-- Backup & Restore Actions -->
-        <button class="btn-header-action" id="btn-export-backup" title="Export Backup JSON">
-          <span>💾 Backup</span>
-        </button>
-        <button class="btn-header-action" id="btn-import-backup" title="Restore Data">
-          <span>📂 Restore</span>
-        </button>
-        <input type="file" id="file-import-input" accept=".json" style="display: none;">
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Application Container -->
-  <main class="main-wrapper">
-
-    <!-- Top Dashboard: 2-Column Grid -->
-    <section class="dashboard-top-grid">
-
-      <!-- Left Column: Month Picker, Affirmation, Today's To-Do -->
-      <div class="left-dashboard-col">
-
-        <!-- Month & Year Selector Card -->
-        <div class="month-picker-card">
-          <div class="month-display-row">
-            <h1 id="header-month-title">September</h1>
-            <span class="habit-tracker-tag">Habit Tracker</span>
-          </div>
-          <div class="date-pickers-row">
-            <div class="picker-group">
-              <label for="month-select">Month</label>
-              <select id="month-select"></select>
-            </div>
-            <div class="picker-group">
-              <label for="year-select">Year</label>
-              <select id="year-select"></select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Visual Affirmation Card (Changes dynamically on every refresh!) -->
-        <div class="affirmation-card">
-          <div class="affirmation-header">
-            <span class="affirmation-title">Visual Affirmation</span>
-            <button class="btn-shuffle" id="btn-shuffle-quote" title="Click for a new inspiring thought">
-              <span>✨ New Quote</span>
-            </button>
-          </div>
-          <div class="affirmation-lead">I am ...</div>
-          <div class="affirmation-body" id="affirmation-text">"Focused, intentional, and ready for whatever comes ahead."</div>
-          <div class="affirmation-author" id="affirmation-author">— Daily Affirmation</div>
-        </div>
-
-        <!-- Today's Action Dashboard & To-Do List -->
-        <div class="today-todo-card">
-          <div class="todo-header">
-            <h2>Today's Focus</h2>
-            <div id="today-todo-stats">
-              <span class="badge-pill">0 tasks</span>
-            </div>
-          </div>
-          <p class="today-subtext" id="today-date-display">Today</p>
-
-          <!-- Add To-Do Form -->
-          <form class="add-todo-form" id="add-todo-form">
-            <div class="todo-input-row">
-              <input type="text" id="new-todo-input" placeholder="What do you want to achieve today?..." autocomplete="off" />
-              <button type="submit" class="btn-add-todo">+ Add</button>
-            </div>
-            <label class="habit-toggle-option">
-              <input type="checkbox" id="is-habit-toggle" />
-              <span>Track as a Daily Habit 🌸</span>
-            </label>
-          </form>
-
-          <!-- Quick Habit Pills -->
-          <div class="quick-habits-wrapper" id="quick-add-habits-pills"></div>
-
-          <!-- To-Do Items Checklist -->
-          <div class="todo-items-list" id="today-todo-list"></div>
-        </div>
-
-      </div>
-
-      <!-- Right Column: Mountain Wave Chart & 5 Donut Rings -->
-      <div class="right-dashboard-col">
-
-        <!-- Wave / Mountain Progress Chart -->
-        <div class="chart-card">
-          <div class="chart-header">
-            <div class="chart-title-group">
-              <h2>Monthly Progress Wave</h2>
-              <span class="chart-subtitle">Daily completion trend across all weeks</span>
-            </div>
-            <!-- Daily Progress Percentage Badge -->
-            <div class="daily-progress-box">
-              <span class="progress-label">Daily Progress</span>
-              <span class="progress-value" id="daily-progress-badge">0%</span>
-            </div>
-          </div>
-
-          <div class="canvas-wrapper">
-            <canvas id="waveChart"></canvas>
-          </div>
-        </div>
-
-        <!-- 5 Weekly Donut Progress Rings -->
-        <div class="donut-rings-card">
-          <div class="donut-rings-grid" id="donut-rings-container">
-            <!-- Rendered dynamically by charts.js -->
-          </div>
-        </div>
-
-      </div>
-
-    </section>
-
-    <!-- Daily Habits Matrix Section -->
-    <section class="habits-section">
-      <div class="section-action-header">
-        <h2>Daily Habits Tracker</h2>
-        <button class="btn-primary" id="btn-add-habit">
-          <span>+ Add Daily Habit</span>
-        </button>
-      </div>
-
-      <!-- Table Container -->
-      <div id="daily-habits-table-container"></div>
-    </section>
-
-    <!-- Bottom Section: Weekly Habits & Monthly Reflection (2-Column) -->
-    <section class="bottom-sections-grid">
-
-      <!-- Weekly Habits -->
-      <div class="bottom-card">
-        <div class="bottom-card-header">
-          <h3>Weekly Habits</h3>
-          <button class="btn-subtle" id="btn-add-weekly">+ Add</button>
-        </div>
-        <div class="weekly-habits-layout">
-          <div class="weekly-stats-side" id="weekly-habits-stats"></div>
-          <div class="weekly-list-side" id="weekly-habits-list"></div>
-        </div>
-      </div>
-
-      <!-- Monthly Habits & Reflection -->
-      <div class="bottom-card">
-        <div class="bottom-card-header">
-          <h3>Monthly Habits & Reflection</h3>
-          <button class="btn-subtle" id="btn-add-monthly">+ Add Habit</button>
-        </div>
-        <div class="monthly-reflection-layout">
-          <!-- Monthly Habits Box -->
-          <div class="monthly-habits-box">
-            <div id="monthly-habits-stats" style="margin-bottom: 8px;"></div>
-            <div id="monthly-habits-list"></div>
-          </div>
-          <!-- Digital Lined Paper Notepad -->
-          <div class="reflection-lined-paper">
-            <label for="monthly-reflection-text">Monthly Reflection</label>
-            <textarea id="monthly-reflection-text" class="lined-textarea" placeholder="Reflect on your achievements, mindful moments, and lessons this month..."></textarea>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-  </main>
-
-  <!-- Modal: Add New Daily Habit -->
-  <div class="modal-overlay" id="modal-add-habit">
-    <div class="modal-window">
-      <div class="modal-header">
-        <h3>Add New Daily Habit</h3>
-        <button class="btn-close-modal" id="btn-close-modal-habit">&times;</button>
-      </div>
-      <form id="form-add-habit">
-        <div class="form-group">
-          <label for="habit-name-input">Habit Name</label>
-          <input type="text" id="habit-name-input" placeholder="e.g., Morning Meditation, 30 Min Reading, Workout..." required autocomplete="off" />
-        </div>
-        <div class="form-group">
-          <label for="habit-goal-input">Monthly Goal % (Optional)</label>
-          <input type="number" id="habit-goal-input" min="10" max="100" value="100" />
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn-primary">Create Habit</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal: Mobile & Laptop Sync with QR Code -->
-  <div class="modal-overlay" id="modal-sync">
-    <div class="modal-window qr-modal-content">
-      <div class="modal-header">
-        <h3>📱 Connect Mobile & Laptop</h3>
-        <button class="btn-close-modal" id="btn-close-sync">&times;</button>
-      </div>
-      <p style="font-size: 0.9rem; color: #64748B;">
-        Use your mobile phone camera to scan the QR code below. Your phone and laptop will sync live in real-time with zero data loss!
-      </p>
-
-      <!-- QR Code Display -->
-      <div class="qr-code-box" id="qr-code-container"></div>
-
-      <!-- Sync Key Configuration -->
-      <div style="margin-top: 16px; text-align: left;">
-        <label style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #94A3B8;">Your Personal Sync Key</label>
-        <div class="sync-key-row">
-          <input type="text" id="custom-sync-key-input" style="flex: 1; padding: 8px 12px; border: 1px solid #CBD5E1; border-radius: 6px; font-weight: 600;" />
-          <button class="btn-primary" id="btn-save-sync-key">Save Key</button>
-        </div>
-        <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 6px;">
-          Any device entering this key will automatically share and sync your habit data.
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <!-- JavaScript Modules -->
-  <script src="js/quotes.js"></script>
-  <script src="js/store.js"></script>
-  <script src="js/sync.js"></script>
-  <script src="js/charts.js"></script>
-  <script src="js/todo.js"></script>
-  <script src="js/app.js"></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fdfaf5">
+<title>Habit Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500;1,600&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fdfaf5;--ink:#2a2733;--mut:#8a8594;--line:#eee3d3;--b:#a9c8fb;--p:#ffb5d8;--t:#a6dfe0;--y:#ffdf9e;--soft:#fcefd9;--pk:#fbe6ef}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 Jost,system-ui,sans-serif;padding-bottom:84px}
+.serif{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic}
+#app{max-width:880px;margin:0 auto;padding:20px 16px}
+header{text-align:center;padding:12px 0 18px}
+.mo{font:italic 600 clamp(48px,12vw,78px)/1 'Cormorant Garamond',serif}
+.sub{letter-spacing:.35em;font-size:12px;margin-top:8px}
+.quote{margin:18px auto 0;max-width:520px;background:var(--soft);border:2px solid var(--y);border-radius:14px;padding:14px 18px;font:italic 500 19px/1.4 'Cormorant Garamond',serif}
+.sync{margin-top:10px;font-size:12px;color:var(--mut)}
+.sync button{margin-left:6px}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:8px 14px;background:var(--b);color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.ghost{background:transparent;color:var(--mut);padding:4px 8px}
+.box{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px}
+h2{font:italic 600 26px 'Cormorant Garamond',serif;margin-bottom:10px}
+.row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px dotted var(--line)}
+.row:last-child{border:0}.row .n{flex:1}.done .n{text-decoration:line-through;color:var(--mut)}
+.chk{width:26px;height:26px;border:2.5px solid var(--c,var(--b));border-radius:7px;background:#fff;padding:0;flex:none;position:relative}
+.chk.on{background:var(--c,var(--b))}
+.chk.on::after{content:"";position:absolute;left:7px;top:2px;width:6px;height:12px;border:solid var(--ink);border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+.ring{--v:0;width:120px;height:120px;border-radius:50%;background:conic-gradient(var(--b) calc(var(--v)*1%),var(--line) 0);display:grid;place-items:center;flex:none}
+.ring span{width:94px;height:94px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font:italic 600 26px 'Cormorant Garamond',serif}
+.top{display:flex;gap:18px;align-items:center}
+.top p{color:var(--mut)}
+form,.add{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+input,select{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;min-width:0;flex:1}
+.tag{font-size:12px;background:var(--pk);border-radius:20px;padding:1px 9px;color:var(--ink)}
+.empty{color:var(--mut);padding:6px 0}
+.mnav{display:flex;justify-content:center;align-items:center;gap:16px;margin-bottom:12px}
+.mnav b{font:italic 600 22px 'Cormorant Garamond',serif;min-width:150px;text-align:center}
+.scroll{overflow-x:auto;padding-bottom:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12px}
+th,td{padding:3px 2px;text-align:center}
+th.d{font:italic 500 14px 'Cormorant Garamond',serif;min-width:30px;border-radius:0}
+td.h,th.h{position:sticky;left:0;background:#fff;text-align:left;min-width:110px;max-width:130px;padding-right:8px;z-index:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.pc{padding-left:8px;color:var(--mut);min-width:44px}
+td .chk{width:22px;height:22px}td .chk.on::after{left:5px;top:1px;width:5px;height:10px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:8px;background:#fffdf9ee;border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+nav button{flex:1;max-width:200px;background:transparent;font-weight:500}
+nav button.on{background:var(--y)}
+textarea{font:inherit;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+.st{background:var(--y)}
+[data-t=dark]{--bg:#1d1b24;--ink:#efeaf5;--mut:#a39db0;--line:#3a3646;--soft:#2c2838;--pk:#3a2a36;--card:#26232f;color-scheme:dark}
+[data-t=dark] .box,[data-t=dark] input,[data-t=dark] select,[data-t=dark] textarea,[data-t=dark] .chk,[data-t=dark] td.h,[data-t=dark] th.h{background:var(--card);color:var(--ink)}
+[data-t=dark] .chk.on{background:var(--c,var(--b))}
+[data-t=dark] .chk.on::after,[data-t=dark] th.d,[data-t=dark] button:not(.ghost):not(.chk){color:#2a2733}
+[data-t=dark] nav{background:#1d1b24ee}[data-t=dark] nav button{color:var(--ink)}[data-t=dark] nav button.on{color:#2a2733}
+.row:has(.hn){flex-wrap:wrap}.hn{min-width:120px}
+</style></head>
+<body><div id="app"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ===== STEP 1: Paste your Firebase web app config here (see README steps) ===== */
+const FB_CONFIG = {
+  apiKey: "AIzaSyB_T8eFtcYqG1CGM_E_GbjiLjZPtc_VG7o",
+  authDomain: "habit-tracker-a17d2.firebaseapp.com",
+  projectId: "habit-tracker-a17d2",
+  storageBucket: "habit-tracker-a17d2.firebasestorage.app",
+  messagingSenderId: "382936932625",
+  appId: "1:382936932625:web:57aea9b4c1e02ea2342cb0",
+  measurementId: "G-DL1SS2EXE9"
+}; // e.g. {apiKey:"...",authDomain:"...",projectId:"...",appId:"..."}
+/* ============================================================================== */
+const Q=["Small steps every day add up to big change.","You don't have to be perfect, just consistent.","Focus on today. Tomorrow will thank you.","Discipline is choosing what you want most over what you want now.","Done is better than perfect.","Progress, not perfection.","Show up even when you don't feel like it.","Your future self is watching. Make them proud.","One habit at a time, one day at a time.","Energy flows where attention goes.","Start where you are. Use what you have.","Motivation gets you started; habit keeps you going.","Be the person your goals need.","Every tick is a vote for who you want to become.","Slow growth is still growth.","Do it tired. Do it scared. Just do it.","Focused, intentional, and ready for the day ahead.","The best time to start was yesterday. The next best is now.","Consistency beats intensity.","Make today count."];
+const COL=['var(--b)','var(--p)','var(--t)','var(--y)','var(--b)'];
+const $=s=>document.querySelector(s),K='habit_tracker_v1';
+const pad=n=>String(n).padStart(2,'0'),ds=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
+S=S||{habits:[],logs:{},todos:[],u:0};
+let pend=null,view='today',cur=new Date(),user=null,ref=null,qi=Math.floor(Math.random()*Q.length),status='local';
+const act=()=>S.habits.filter(h=>!h.x),today=()=>ds(new Date());
+const nm=s=>String(s).toLowerCase().replace(/[^a-z0-9\u0d00-\u0d7f]+/g,'');
+function nz(){S.mh=S.mh||[];S.md=S.md||{};S.notes=S.notes||{};S.mh.forEach(x=>{if(!x.x&&!lk(x)){const h=S.habits.find(z=>!z.x&&nm(z.name)==nm(x.name));if(h)x.h=h.id}})}
+const lk=x=>!!x.h&&S.habits.some(h=>h.id==x.h&&!h.x);
+function cnt(k,h){let c=0;for(let i=1;i<=31;i++)if(isOn(k+'-'+pad(i),h))c++;return c}
+const mDone=(x,k)=>lk(x)?cnt(k,x.h)>0:!!(S.md[k]&&S.md[k][x.id]);
+function addM(n,h){const e=S.mh.find(x=>(h&&x.h==h)||nm(x.name)==nm(n));if(e){e.x=false;if(h&&!lk(e))e.h=h;return}S.mh.push({id:uid(),name:n,h:h||''})}
+function askM(n,h){const e=S.mh.find(x=>!x.x&&nm(x.name)==nm(n));if(e&&!lk(e))e.h=h}
+const isOn=(d,h)=>!!(S.logs[d]&&S.logs[d][h]);
+function setLog(d,h,v){S.logs[d]=S.logs[d]||{};if(v)S.logs[d][h]=1;else delete S.logs[d][h]}
+function save(){S.u=Date.now();localStorage.setItem(K,JSON.stringify(S));push();render()}
+function push(){if(ref)ref.set({data:JSON.stringify(S)}).then(()=>{status='synced';sy()}).catch(()=>{status='offline';sy()})}
+function sy(){const e=$('#sy');if(e)e.innerHTML=syncHtml()}
+function syncHtml(){
+  if(!FB_CONFIG)return 'Saved on this device only. <span class="tag">Set up sync to use on phone + laptop</span>';
+  if(!user)return '<button data-a="in">Sign in with Google to sync</button>';
+  return (status=='offline'?'Offline, will sync later':'Synced')+' · '+esc(user.email||'')+'<button class="ghost" data-a="out">Sign out</button>'}
+function initFB(){
+  if(!FB_CONFIG||typeof firebase==='undefined')return;
+  firebase.initializeApp(FB_CONFIG);const db=firebase.firestore();
+  firebase.auth().onAuthStateChanged(u=>{user=u;
+    if(!u){ref=null;render();return}
+    ref=db.collection('users').doc(u.uid);
+    ref.onSnapshot(s=>{
+      const r=s.exists?JSON.parse(s.data().data):null;
+      if(r&&r.u>S.u){S=r;localStorage.setItem(K,JSON.stringify(S));status='synced';render()}
+      else if(!r||S.u>r.u)push();
+      else{status='synced';sy()}
+    },()=>{status='offline';sy()});
+    render()})}
+function streak(h){let c=0,d=new Date();if(!isOn(ds(d),h))d.setDate(d.getDate()-1);while(isOn(ds(d),h)){c++;d.setDate(d.getDate()-1)}return c}
+function pct(d){const a=act();return a.length?Math.round(a.filter(h=>isOn(d,h.id)).length/a.length*100):0}
+function vToday(){
+  const d=today(),a=act(),p=pct(d);
+  const tl=S.todos.filter(t=>t.date==d||(t.date<d&&!t.done));
+  const up=S.todos.filter(t=>t.date>d&&!t.done).sort((x,y)=>x.date<y.date?-1:1);
+  const opts=a.map(h=>`<option value="${h.id}">${esc(h.name)}</option>`).join('');
+  return `<div class="box"><div class="top"><div class="ring" style="--v:${p}"><span>${p}%</span></div><div><h2>Today</h2><p>${new Date().toLocaleDateString('en',{weekday:'long',day:'numeric',month:'long'})}</p><p>${a.filter(h=>isOn(d,h.id)).length} of ${a.length} habits done</p></div></div></div>
+  <div class="box"><h2>To-do today</h2>${tl.length?tl.map(t=>{const h=S.habits.find(x=>x.id==t.h);return `<div class="row ${t.done?'done':''}"><button class="chk ${t.done?'on':''}" style="--c:var(--p)" data-a="tt" data-i="${t.id}" aria-label="Toggle task"></button><span class="n">${esc(t.text)} ${h?`<span class="tag">${esc(h.name)}</span>`:''}${t.date<d?'<span class="tag">carried over</span>':''}</span>${!t.h?`<button class="ghost" data-a="mh" data-i="${t.id}">+ Habit</button>`:''}<button class="ghost" data-a="dt" data-i="${t.id}" aria-label="Delete task">✕</button></div>`}).join(''):'<p class="empty">Nothing planned yet. Add your first task below.</p>'}
+  <div class="add"><input id="nt" placeholder="What do you need to do today?"><input type="date" id="nd" value="${d}" style="flex:0 0 auto"><select id="nh"><option value="">No habit link</option>${opts}<option value="__new">+ Also make it a habit</option></select><button data-a="at">Add task</button></div></div>
+  ${up.length?`<div class="box"><h2>Upcoming</h2>${up.map(t=>`<div class="row"><span class="n">${esc(t.text)} <span class="tag">${t.date}</span></span><button class="ghost" data-a="dt" data-i="${t.id}" aria-label="Delete task">✕</button></div>`).join('')}</div>`:''}<div class="box"><h2>Daily habits</h2>${a.length?a.map((h,i)=>`<div class="row ${isOn(d,h.id)?'done':''}"><button class="chk ${isOn(d,h.id)?'on':''}" style="--c:${COL[i%4]}" data-a="tg" data-h="${h.id}" data-d="${d}" aria-label="Toggle ${esc(h.name)}"></button><span class="n">${esc(h.name)} ${streak(h.id)>0?`<span class="tag st">${streak(h.id)}-day streak</span>`:''}</span><button class="ghost" data-a="tab" data-v="habits">Edit</button></div>`).join(''):'<p class="empty">No habits yet. Open the Habits tab to add some.</p>'}</div>`}
+function vMonthly(k){
+  const L=S.mh.filter(x=>!x.x),miss=act().filter(h=>!L.some(x=>x.h==h.id));
+  const dn=L.filter(x=>mDone(x,k)).length,p=L.length?Math.round(dn/L.length*100):0;
+  return `<div class="box"><h2>Monthly habits</h2><p class="empty">${dn} / ${L.length} completed · ${p}%</p>${L.map(x=>{const l=lk(x),on=mDone(x,k);return `<div class="row ${on?'done':''}"><button class="chk ${on?'on':''}" style="--c:var(--p)" data-a="tm" data-i="${x.id}" data-k="${k}" ${l?'disabled':''} aria-label="${esc(x.name)}"></button><span class="n">${esc(x.name)} ${l?`<span class="tag">from daily · ${cnt(k,x.h)} days</span>`:''}</span></div>`}).join('')||'<p class="empty">No monthly habits yet.</p>'}</div>`}
+function vMonth(){
+  const y=cur.getFullYear(),m=cur.getMonth(),n=new Date(y,m+1,0).getDate(),a=act();
+  const days=[...Array(n)].map((_,i)=>i+1),dd=i=>y+'-'+pad(m+1)+'-'+pad(i);
+  let tot=0;
+  const rows=a.map(h=>{let c=0;const cells=days.map(i=>{const on=isOn(dd(i),h.id);if(on)c++;return `<td><button class="chk ${on?'on':''}" style="--c:${COL[Math.floor((i-1)/7)]}" data-a="tg" data-h="${h.id}" data-d="${dd(i)}" aria-label="${esc(h.name)} ${i}"></button></td>`}).join('');tot+=c;return `<tr><td class="h">${esc(h.name)}</td>${cells}<td class="pc">${Math.round(c/n*100)}%</td></tr>`}).join('');
+  const p=a.length?Math.round(tot/(n*a.length)*100):0;
+  const wk=[0,1,2,3,4].map(w=>{let c=0,t=0;days.filter(i=>Math.floor((i-1)/7)==w).forEach(i=>{t+=a.length;a.forEach(h=>{if(isOn(dd(i),h.id))c++})});return t?`<div class="ring" style="--v:${Math.round(c/t*100)};--b:${COL[w]};width:84px;height:84px"><span style="width:64px;height:64px;font-size:19px">${Math.round(c/t*100)}%</span></div>`:''}).join('');
+  return `<div class="mnav"><button data-a="pm">‹</button><b>${cur.toLocaleString('en',{month:'long'})} ${y}</b><button data-a="nm">›</button></div>
+  <div class="box"><div class="top"><div class="ring" style="--v:${p}"><span>${p}%</span></div><div><h2>Month progress</h2><p>Weekly:</p></div></div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">${wk}</div></div>
+  <div class="box"><h2>Daily habits</h2>${a.length?`<div class="scroll"><table><tr><th class="h"></th>${days.map(i=>`<th class="d" style="background:${COL[Math.floor((i-1)/7)]}">${i}</th>`).join('')}<th></th></tr>${rows}</table></div>`:'<p class="empty">Add habits in the Habits tab.</p>'}</div>${vMonthly(y+'-'+pad(m+1))}<div class="box"><h2>Monthly reflection</h2><textarea id="rf" rows="5" placeholder="What went well? What will you change next month?">${esc((S.notes||{})[y+'-'+pad(m+1)]||'')}</textarea></div>`}
+function vHabits(){
+  return `<div class="box"><h2>My habits</h2>${act().map(h=>`<div class="row"><input class="hn" data-h="${h.id}" value="${esc(h.name)}" aria-label="Habit name"><span class="tag">streak ${streak(h.id)}</span>${S.mh.some(x=>!x.x&&x.h==h.id)?'':`<button class="ghost" data-a="h2m" data-h="${h.id}">+ Monthly</button>`}<button class="ghost" data-a="ah" data-h="${h.id}">Archive</button><button class="ghost" data-a="dh" data-h="${h.id}">${pend==h.id?'Tap again to delete':'Delete'}</button></div>`).join('')||'<p class="empty">No habits yet.</p>'}
+  <div class="add"><input id="nhb" placeholder="New habit, e.g. 3 L water"><label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="nhm" style="flex:0 0 auto;width:auto"> Also monthly</label><button data-a="addh">Add habit</button></div></div>
+  <div class="box"><h2>Monthly habits</h2>${S.mh.filter(x=>!x.x).map(x=>`<div class="row"><span class="n">${esc(x.name)}</span><button class="ghost" data-a="rm" data-i="${x.id}">Remove</button></div>`).join('')||'<p class="empty">None yet.</p>'}<div class="add"><input id="nmb" placeholder="New monthly habit"><button data-a="addm">Add monthly habit</button></div></div>
+  <div class="box"><h2>Backup and display</h2><div class="add"><button data-a="ex">Export backup</button><button data-a="im">Import backup</button><button data-a="dm">Light / dark mode</button></div><input type="file" id="fi" accept=".json" hidden></div>
+  ${S.habits.some(h=>h.x)?`<div class="box"><h2>Archived</h2><p class="empty">Past data is kept safe.</p>${S.habits.filter(h=>h.x).map(h=>`<div class="row"><span class="n">${esc(h.name)}</span><button class="ghost" data-a="rh" data-h="${h.id}">Restore</button><button class="ghost" data-a="dh" data-h="${h.id}">${pend==h.id?'Tap again to delete':'Delete'}</button></div>`).join('')}</div>`:''}`}
+function render(){nz();
+  const f=document.activeElement&&document.activeElement.id,v=f&&document.activeElement.value;
+  const n=new Date();
+  $('#app').innerHTML=`<header><div class="mo">${(view=='month'?cur:n).toLocaleString('en',{month:'long'})}</div><div class="sub">HABIT TRACKER</div><div class="quote">“${Q[qi]}”</div><div class="sync" id="sy">${syncHtml()}</div></header>${view=='today'?vToday():view=='month'?vMonth():vHabits()}<nav>${[['today','Today'],['month','Month'],['habits','Habits']].map(t=>`<button data-a="tab" data-v="${t[0]}" class="${view==t[0]?'on':''}">${t[1]}</button>`).join('')}</nav>`;
+  if(f&&$('#'+f)){$('#'+f).value=v}}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,D=b.dataset;
+  if(a=='tab'){view=D.v;render();window.scrollTo(0,0)}
+  else if(a=='tg'){setLog(D.d,D.h,!isOn(D.d,D.h));save()}
+  else if(a=='tt'){const t=S.todos.find(x=>x.id==D.i);t.done=!t.done;if(t.h)setLog(t.date<today()&&t.done?today():t.date,t.h,t.done);if(t.done)t.doneOn=today();save()}
+  else if(a=='dt'){S.todos=S.todos.filter(x=>x.id!=D.i);save()}
+  else if(a=='at'){const v=$('#nt').value.trim();if(!v)return;let hv=$('#nh').value;if(hv=='__new'){const ex=S.habits.find(x=>x.name.toLowerCase()==v.toLowerCase());if(ex){ex.x=false;hv=ex.id}else{hv=uid();S.habits.push({id:hv,name:v});askM(v,hv)}}S.todos.push({id:uid(),text:v,date:$('#nd').value||today(),done:false,h:hv});save()}
+  else if(a=='mh'){const t=S.todos.find(x=>x.id==D.i);let h=S.habits.find(x=>x.name.toLowerCase()==t.text.toLowerCase());if(!h){h={id:uid(),name:t.text};S.habits.push(h);askM(h.name,h.id)}else h.x=false;t.h=h.id;if(t.done)setLog(t.date,h.id,true);save()}
+  else if(a=='addh'){const v=$('#nhb').value.trim();if(!v)return;const hid=uid();S.habits.push({id:hid,name:v});askM(v,hid);if($('#nhm').checked)addM(v,hid);save()}
+  else if(a=='ah'||a=='rh'){S.habits.find(x=>x.id==D.h).x=a=='ah';save()}
+  else if(a=='tm'){const x=S.mh.find(z=>z.id==D.i);S.md[D.k]=S.md[D.k]||{};if(S.md[D.k][x.id])delete S.md[D.k][x.id];else S.md[D.k][x.id]=1;save()}
+  else if(a=='am'){act().forEach(h=>addM(h.name,h.id));save()}
+  else if(a=='h2m'){const h=S.habits.find(x=>x.id==D.h);addM(h.name,h.id);save()}
+  else if(a=='addm'){const v=$('#nmb').value.trim();if(!v)return;const ex=S.habits.find(h=>!h.x&&h.name.toLowerCase()==v.toLowerCase());addM(v,ex?ex.id:'');save()}
+  else if(a=='rm'){S.mh=S.mh.filter(x=>x.id!=D.i);save()}
+  else if(a=='dh'){const h=S.habits.find(x=>x.id==D.h);if(!h)return;if(pend!=h.id){pend=h.id;render();setTimeout(()=>{if(pend==h.id){pend=null;render()}},4000);return}pend=null;S.habits=S.habits.filter(x=>x.id!=h.id);for(const d in S.logs)delete S.logs[d][h.id];S.mh=S.mh.filter(x=>x.h!=h.id);S.todos.forEach(t=>{if(t.h==h.id)t.h=''});save()}
+  else if(a=='rn'){const h=S.habits.find(x=>x.id==D.h),v=prompt('Rename habit',h.name);if(v&&v.trim()){h.name=v.trim();S.mh.forEach(x=>{if(x.h==h.id)x.name=h.name});save()}}
+  else if(a=='ex'){const u=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'})),l=document.createElement('a');l.href=u;l.download='habit-backup-'+today()+'.json';l.click();URL.revokeObjectURL(u)}
+  else if(a=='im'){$('#fi').click()}
+  else if(a=='dm'){const t=document.documentElement.dataset.t=='dark'?'':'dark';document.documentElement.dataset.t=t;localStorage.setItem('ht_theme',t)}
+  else if(a=='pm'){cur=new Date(cur.getFullYear(),cur.getMonth()-1,1);render()}
+  else if(a=='nm'){cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);render()}
+  else if(a=='in'){firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(()=>{status='offline';sy()})}
+  else if(a=='out'){firebase.auth().signOut()}});
+document.addEventListener('keydown',e=>{if(e.key=='Enter'){const i=e.target.id;if(i=='nt')document.querySelector('[data-a=at]').click();if(i=='nhb')document.querySelector('[data-a=addh]').click()}});
+document.addEventListener('change',e=>{
+  if(e.target.classList.contains('hn')){const h=S.habits.find(x=>x.id==e.target.dataset.h),v=e.target.value.trim();if(h&&v){h.name=v;S.mh.forEach(x=>{if(x.h==h.id)x.name=v});save()}}
+  if(e.target.id=='rf'){S.notes=S.notes||{};S.notes[ds(cur).slice(0,7)]=e.target.value;save()}
+  if(e.target.id=='fi'){const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const j=JSON.parse(t);if(!Array.isArray(j.habits))throw 0;if(confirm('Replace current data with this backup?')){S=j;save()}}catch(x){alert('This is not a valid backup file.')}})}});
+document.documentElement.dataset.t=localStorage.getItem('ht_theme')||'';
+render();initFB();
+</script></body></html>
