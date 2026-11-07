@@ -172,7 +172,7 @@ function sy(){const e=$('#sy');if(e)e.innerHTML=syncHtml()}
 function syncHtml(){
   if(!FB_CONFIG)return 'Saved on this device only. <span class="tag">Set up sync to use on phone + laptop</span>';
   if(!user)return '<button data-a="in">Sign in with Google to sync</button>';
-  return (status=='offline'?'Offline, will sync later':'Synced')+' · '+esc(user.email||'')+'<button class="ghost" data-a="out">Sign out</button>'}
+  return status=='offline'?'Offline, will sync later':''}
 function initFB(){
   if(!FB_CONFIG||typeof firebase==='undefined')return;
   firebase.initializeApp(FB_CONFIG);const db=firebase.firestore();
@@ -222,7 +222,7 @@ function vManage(){
   ${S.habits.some(h=>h.x)?`<div class="box"><h2>Archived</h2><p class="empty">Past data is kept safe.</p>${S.habits.filter(h=>h.x).map(h=>`<div class="row"><span class="n">${esc(h.name)}</span><button class="ghost" data-a="rh" data-h="${h.id}">Restore</button><button class="ghost" data-a="dh" data-h="${h.id}">${pend==h.id?'Tap again to delete':'Delete'}</button></div>`).join('')}</div>`:''}`}
 function vMonthSet(){
   return `<div class="box"><h2>Monthly habits</h2>${S.mh.filter(x=>!x.x).map(x=>`<div class="row"><span class="n">${esc(x.name)}</span><button class="ghost" data-a="rm" data-i="${x.id}">Remove</button></div>`).join('')||'<p class="empty">None yet.</p>'}<div class="add"><input id="nmb" placeholder="New monthly habit"><button data-a="addm">Add monthly habit</button></div></div>
-  <div class="box"><h2>Backup and display</h2><div class="add"><button data-a="ex">Export backup</button><button data-a="im">Import backup</button><button data-a="rmo">${pend=='rmo'?'Tap again to reset':'Reset '+cur.toLocaleString('en',{month:'long'})}</button><button data-a="dm">Light / dark mode</button></div><input type="file" id="fi" accept=".json" hidden></div>`}
+  <div class="box"><h2>Backup and display</h2><div class="add"><button data-a="ex">Export backup</button><button data-a="im">Import backup</button><button data-a="rmo">${pend=='rmo'?'Tap again to reset':'Reset '+cur.toLocaleString('en',{month:'long'})}</button><button data-a="dm">Light / dark mode</button>${user?'<button data-a="out">Sign out</button>':''}</div><input type="file" id="fi" accept=".json" hidden></div>`}
 function vPage1(){return vDaily()+vTodo()+vManage()}
 function vPage2(){return vMonth()+vMonthSet()}
 function render(){nz();
