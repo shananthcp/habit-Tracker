@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#fdfaf5">
+<meta name="theme-color" content="#0f0f0f">
 <title>Habit Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500;1,600&family=Jost:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -48,12 +48,32 @@ nav button{flex:1;max-width:200px;background:transparent;font-weight:500}
 nav button.on{background:var(--y)}
 textarea{font:inherit;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
 .st{background:var(--y)}
-[data-t=dark]{--bg:#1d1b24;--ink:#efeaf5;--mut:#a39db0;--line:#3a3646;--soft:#2c2838;--pk:#3a2a36;--card:#26232f;color-scheme:dark}
+[data-t=dark]{--bg:#0f0f0f;--ink:#f1f1f1;--mut:#aaa;--line:#303030;--soft:#212121;--pk:#2a1f27;--card:#181818;color-scheme:dark}
 [data-t=dark] .box,[data-t=dark] input,[data-t=dark] select,[data-t=dark] textarea,[data-t=dark] .chk,[data-t=dark] td.h,[data-t=dark] th.h{background:var(--card);color:var(--ink)}
 [data-t=dark] .chk.on{background:var(--c,var(--b))}
-[data-t=dark] .chk.on::after,[data-t=dark] th.d,[data-t=dark] button:not(.ghost):not(.chk){color:#2a2733}
-[data-t=dark] nav{background:#1d1b24ee}[data-t=dark] nav button{color:var(--ink)}[data-t=dark] nav button.on{color:#2a2733}
+[data-t=dark] .chk.on::after,[data-t=dark] th.d{color:#2a2733}
+[data-t=dark] .chk.on::after{border-color:#0f0f0f}
+[data-t=dark] nav{background:#0f0f0fee;border-color:#303030}
+[data-t=dark] button:not(.chk){background:#272727;color:#f1f1f1;border-radius:999px}
+[data-t=dark] button:not(.chk):hover{background:#3f3f3f}
+[data-t=dark] .ghost{background:transparent;color:#aaa}
+[data-t=dark] nav button.on{background:#f1f1f1;color:#0f0f0f}
+[data-t=dark] .quote{background:#212121;border:1px solid #303030;border-radius:18px}
+[data-t=dark] .tag{background:#272727;color:#f1f1f1}
+[data-t=dark] .tag.st{background:var(--y);color:#0f0f0f}
+[data-t=dark] .box{border-radius:18px}
+[data-t=dark] input:not([type=checkbox]),[data-t=dark] select{border-radius:999px;border-color:#303030;padding-left:16px}
+[data-t=dark] textarea{border-radius:18px;border-color:#303030}
+[data-t=dark] .mnav button{width:40px;height:40px;padding:0;border-radius:50%}
 .row:has(.hn){flex-wrap:wrap}.hn{min-width:120px}
+.drow{display:flex;align-items:center;gap:14px;width:100%;min-height:60px;margin-bottom:10px;padding:10px 16px;background:#fff;border:1px solid var(--line);border-radius:18px;text-align:left}
+.drow .n{flex:1;font-size:17px}.drow.on .n{color:var(--mut);text-decoration:line-through}
+.dbox{width:32px;height:32px;border:3px solid var(--c);border-radius:9px;flex:none;position:relative}
+.drow.on .dbox{background:var(--c)}
+.drow.on .dbox::after{content:"";position:absolute;left:9px;top:2px;width:8px;height:16px;border:solid #0f0f0f;border-width:0 3px 3px 0;transform:rotate(45deg)}
+button:disabled{opacity:.4;cursor:default}
+[data-t=dark] button.drow{background:var(--card);border-radius:18px;color:var(--ink)}
+[data-t=dark] button.drow:hover{background:#212121}
 </style></head>
 <body><div id="app"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -79,7 +99,7 @@ const uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let S;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
 S=S||{habits:[],logs:{},todos:[],u:0};
-let pend=null,view='today',cur=new Date(),user=null,ref=null,qi=Math.floor(Math.random()*Q.length),status='local';
+let pend=null,dday=new Date(),view='daily',cur=new Date(),user=null,ref=null,qi=Math.floor(Math.random()*Q.length),status='local';
 const act=()=>S.habits.filter(h=>!h.x),today=()=>ds(new Date());
 const nm=s=>String(s).toLowerCase().replace(/[^a-z0-9\u0d00-\u0d7f]+/g,'');
 function nz(){S.mh=S.mh||[];S.md=S.md||{};S.notes=S.notes||{};S.mh.forEach(x=>{if(!x.x&&!lk(x)){const h=S.habits.find(z=>!z.x&&nm(z.name)==nm(x.name));if(h)x.h=h.id}})}
@@ -112,15 +132,19 @@ function initFB(){
     render()})}
 function streak(h){let c=0,d=new Date();if(!isOn(ds(d),h))d.setDate(d.getDate()-1);while(isOn(ds(d),h)){c++;d.setDate(d.getDate()-1)}return c}
 function pct(d){const a=act();return a.length?Math.round(a.filter(h=>isOn(d,h.id)).length/a.length*100):0}
-function vToday(){
+function vTodo(){
   const d=today(),a=act(),p=pct(d);
   const tl=S.todos.filter(t=>t.date==d||(t.date<d&&!t.done));
   const up=S.todos.filter(t=>t.date>d&&!t.done).sort((x,y)=>x.date<y.date?-1:1);
   const opts=a.map(h=>`<option value="${h.id}">${esc(h.name)}</option>`).join('');
-  return `<div class="box"><div class="top"><div class="ring" style="--v:${p}"><span>${p}%</span></div><div><h2>Today</h2><p>${new Date().toLocaleDateString('en',{weekday:'long',day:'numeric',month:'long'})}</p><p>${a.filter(h=>isOn(d,h.id)).length} of ${a.length} habits done</p></div></div></div>
-  <div class="box"><h2>To-do today</h2>${tl.length?tl.map(t=>{const h=S.habits.find(x=>x.id==t.h);return `<div class="row ${t.done?'done':''}"><button class="chk ${t.done?'on':''}" style="--c:var(--p)" data-a="tt" data-i="${t.id}" aria-label="Toggle task"></button><span class="n">${esc(t.text)} ${h?`<span class="tag">${esc(h.name)}</span>`:''}${t.date<d?'<span class="tag">carried over</span>':''}</span>${!t.h?`<button class="ghost" data-a="mh" data-i="${t.id}">+ Habit</button>`:''}<button class="ghost" data-a="dt" data-i="${t.id}" aria-label="Delete task">✕</button></div>`}).join(''):'<p class="empty">Nothing planned yet. Add your first task below.</p>'}
+  return `<div class="box"><h2>To-do today</h2>${tl.length?tl.map(t=>{const h=S.habits.find(x=>x.id==t.h);return `<div class="row ${t.done?'done':''}"><button class="chk ${t.done?'on':''}" style="--c:var(--p)" data-a="tt" data-i="${t.id}" aria-label="Toggle task"></button><span class="n">${esc(t.text)} ${h?`<span class="tag">${esc(h.name)}</span>`:''}${t.date<d?'<span class="tag">carried over</span>':''}</span>${!t.h?`<button class="ghost" data-a="mh" data-i="${t.id}">+ Habit</button>`:''}<button class="ghost" data-a="dt" data-i="${t.id}" aria-label="Delete task">✕</button></div>`}).join(''):'<p class="empty">Nothing planned yet. Add your first task below.</p>'}
   <div class="add"><input id="nt" placeholder="What do you need to do today?"><input type="date" id="nd" value="${d}" style="flex:0 0 auto"><select id="nh"><option value="">No habit link</option>${opts}<option value="__new">+ Also make it a habit</option></select><button data-a="at">Add task</button></div></div>
-  ${up.length?`<div class="box"><h2>Upcoming</h2>${up.map(t=>`<div class="row"><span class="n">${esc(t.text)} <span class="tag">${t.date}</span></span><button class="ghost" data-a="dt" data-i="${t.id}" aria-label="Delete task">✕</button></div>`).join('')}</div>`:''}<div class="box"><h2>Daily habits</h2>${a.length?a.map((h,i)=>`<div class="row ${isOn(d,h.id)?'done':''}"><button class="chk ${isOn(d,h.id)?'on':''}" style="--c:${COL[i%4]}" data-a="tg" data-h="${h.id}" data-d="${d}" aria-label="Toggle ${esc(h.name)}"></button><span class="n">${esc(h.name)} ${streak(h.id)>0?`<span class="tag st">${streak(h.id)}-day streak</span>`:''}</span><button class="ghost" data-a="tab" data-v="habits">Edit</button></div>`).join(''):'<p class="empty">No habits yet. Open the Habits tab to add some.</p>'}</div>`}
+  ${up.length?`<div class="box"><h2>Upcoming</h2>${up.map(t=>`<div class="row"><span class="n">${esc(t.text)} <span class="tag">${t.date}</span></span><button class="ghost" data-a="dt" data-i="${t.id}" aria-label="Delete task">✕</button></div>`).join('')}</div>`:''}`}
+function vDaily(){
+  const d=ds(dday),a=act(),n=a.filter(h=>isOn(d,h.id)).length,p=a.length?Math.round(n/a.length*100):0,t=d==today();
+  return `<div class="mnav"><button data-a="dprev" aria-label="Previous day">‹</button><b>${dday.toLocaleDateString('en',{weekday:'short',day:'numeric',month:'short'})}</b><button data-a="dnext" aria-label="Next day" ${t?'disabled':''}>›</button></div>${t?'':'<p style="text-align:center;margin-bottom:12px"><button data-a="dtoday">Back to today</button></p>'}
+  <div class="box"><div class="top"><div class="ring" style="--v:${p}"><span>${p}%</span></div><div><h2>Daily habits</h2><p>${n} of ${a.length} done</p></div></div></div>
+  ${a.length?a.map((h,i)=>`<button class="drow ${isOn(d,h.id)?'on':''}" data-a="tg" data-h="${h.id}" data-d="${d}" style="--c:${COL[i%4]}"><span class="dbox"></span><span class="n">${esc(h.name)}${streak(h.id)>0?` <span class="tag st">${streak(h.id)}-day streak</span>`:''}</span></button>`).join(''):'<p class="empty">No habits yet. Add your first one under "My habits" below.</p>'}`}
 function vMonthly(k){
   const L=S.mh.filter(x=>!x.x),miss=act().filter(h=>!L.some(x=>x.h==h.id));
   const dn=L.filter(x=>mDone(x,k)).length,p=L.length?Math.round(dn/L.length*100):0;
@@ -134,17 +158,20 @@ function vMonth(){
   const wk=[0,1,2,3,4].map(w=>{let c=0,t=0;days.filter(i=>Math.floor((i-1)/7)==w).forEach(i=>{t+=a.length;a.forEach(h=>{if(isOn(dd(i),h.id))c++})});return t?`<div class="ring" style="--v:${Math.round(c/t*100)};--b:${COL[w]};width:84px;height:84px"><span style="width:64px;height:64px;font-size:19px">${Math.round(c/t*100)}%</span></div>`:''}).join('');
   return `<div class="mnav"><button data-a="pm">‹</button><b>${cur.toLocaleString('en',{month:'long'})} ${y}</b><button data-a="nm">›</button></div>
   <div class="box"><div class="top"><div class="ring" style="--v:${p}"><span>${p}%</span></div><div><h2>Month progress</h2><p>Weekly:</p></div></div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">${wk}</div></div>
-  <div class="box"><h2>Daily habits</h2>${a.length?`<div class="scroll"><table><tr><th class="h"></th>${days.map(i=>`<th class="d" style="background:${COL[Math.floor((i-1)/7)]}">${i}</th>`).join('')}<th></th></tr>${rows}</table></div>`:'<p class="empty">Add habits in the Habits tab.</p>'}</div>${vMonthly(y+'-'+pad(m+1))}<div class="box"><h2>Monthly reflection</h2><textarea id="rf" rows="5" placeholder="What went well? What will you change next month?">${esc((S.notes||{})[y+'-'+pad(m+1)]||'')}</textarea></div>`}
-function vHabits(){
+  <div class="box"><h2>Daily habits</h2>${a.length?`<div class="scroll"><table><tr><th class="h"></th>${days.map(i=>`<th class="d" style="background:${COL[Math.floor((i-1)/7)]}">${i}</th>`).join('')}<th></th></tr>${rows}</table></div>`:'<p class="empty">Add habits on the Daily Habits page.</p>'}</div>${vMonthly(y+'-'+pad(m+1))}<div class="box"><h2>Monthly reflection</h2><textarea id="rf" rows="5" placeholder="What went well? What will you change next month?">${esc((S.notes||{})[y+'-'+pad(m+1)]||'')}</textarea></div>`}
+function vManage(){
   return `<div class="box"><h2>My habits</h2>${act().map(h=>`<div class="row"><input class="hn" data-h="${h.id}" value="${esc(h.name)}" aria-label="Habit name"><span class="tag">streak ${streak(h.id)}</span>${S.mh.some(x=>!x.x&&x.h==h.id)?'':`<button class="ghost" data-a="h2m" data-h="${h.id}">+ Monthly</button>`}<button class="ghost" data-a="ah" data-h="${h.id}">Archive</button><button class="ghost" data-a="dh" data-h="${h.id}">${pend==h.id?'Tap again to delete':'Delete'}</button></div>`).join('')||'<p class="empty">No habits yet.</p>'}
   <div class="add"><input id="nhb" placeholder="New habit, e.g. 3 L water"><label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="nhm" style="flex:0 0 auto;width:auto"> Also monthly</label><button data-a="addh">Add habit</button></div></div>
-  <div class="box"><h2>Monthly habits</h2>${S.mh.filter(x=>!x.x).map(x=>`<div class="row"><span class="n">${esc(x.name)}</span><button class="ghost" data-a="rm" data-i="${x.id}">Remove</button></div>`).join('')||'<p class="empty">None yet.</p>'}<div class="add"><input id="nmb" placeholder="New monthly habit"><button data-a="addm">Add monthly habit</button></div></div>
-  <div class="box"><h2>Backup and display</h2><div class="add"><button data-a="ex">Export backup</button><button data-a="im">Import backup</button><button data-a="dm">Light / dark mode</button></div><input type="file" id="fi" accept=".json" hidden></div>
   ${S.habits.some(h=>h.x)?`<div class="box"><h2>Archived</h2><p class="empty">Past data is kept safe.</p>${S.habits.filter(h=>h.x).map(h=>`<div class="row"><span class="n">${esc(h.name)}</span><button class="ghost" data-a="rh" data-h="${h.id}">Restore</button><button class="ghost" data-a="dh" data-h="${h.id}">${pend==h.id?'Tap again to delete':'Delete'}</button></div>`).join('')}</div>`:''}`}
+function vMonthSet(){
+  return `<div class="box"><h2>Monthly habits</h2>${S.mh.filter(x=>!x.x).map(x=>`<div class="row"><span class="n">${esc(x.name)}</span><button class="ghost" data-a="rm" data-i="${x.id}">Remove</button></div>`).join('')||'<p class="empty">None yet.</p>'}<div class="add"><input id="nmb" placeholder="New monthly habit"><button data-a="addm">Add monthly habit</button></div></div>
+  <div class="box"><h2>Backup and display</h2><div class="add"><button data-a="ex">Export backup</button><button data-a="im">Import backup</button><button data-a="dm">Light / dark mode</button></div><input type="file" id="fi" accept=".json" hidden></div>`}
+function vPage1(){return vDaily()+vTodo()+vManage()}
+function vPage2(){return vMonth()+vMonthSet()}
 function render(){nz();
   const f=document.activeElement&&document.activeElement.id,v=f&&document.activeElement.value;
   const n=new Date();
-  $('#app').innerHTML=`<header><div class="mo">${(view=='month'?cur:n).toLocaleString('en',{month:'long'})}</div><div class="sub">HABIT TRACKER</div><div class="quote">“${Q[qi]}”</div><div class="sync" id="sy">${syncHtml()}</div></header>${view=='today'?vToday():view=='month'?vMonth():vHabits()}<nav>${[['today','Today'],['month','Month'],['habits','Habits']].map(t=>`<button data-a="tab" data-v="${t[0]}" class="${view==t[0]?'on':''}">${t[1]}</button>`).join('')}</nav>`;
+  $('#app').innerHTML=`<header><div class="mo">${(view=='month'?cur:n).toLocaleString('en',{month:'long'})}</div><div class="sub">HABIT TRACKER</div><div class="quote">“${Q[qi]}”</div><div class="sync" id="sy">${syncHtml()}</div></header>${view=='month'?vPage2():vPage1()}<nav>${[['daily','Daily Habits'],['month','Monthly Habits']].map(t=>`<button data-a="tab" data-v="${t[0]}" class="${view==t[0]?'on':''}">${t[1]}</button>`).join('')}</nav>`;
   if(f&&$('#'+f)){$('#'+f).value=v}}
 document.addEventListener('click',e=>{
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,D=b.dataset;
@@ -166,6 +193,9 @@ document.addEventListener('click',e=>{
   else if(a=='ex'){const u=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'})),l=document.createElement('a');l.href=u;l.download='habit-backup-'+today()+'.json';l.click();URL.revokeObjectURL(u)}
   else if(a=='im'){$('#fi').click()}
   else if(a=='dm'){const t=document.documentElement.dataset.t=='dark'?'':'dark';document.documentElement.dataset.t=t;localStorage.setItem('ht_theme',t)}
+  else if(a=='dprev'){dday.setDate(dday.getDate()-1);render()}
+  else if(a=='dnext'){dday.setDate(dday.getDate()+1);render()}
+  else if(a=='dtoday'){dday=new Date();render()}
   else if(a=='pm'){cur=new Date(cur.getFullYear(),cur.getMonth()-1,1);render()}
   else if(a=='nm'){cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);render()}
   else if(a=='in'){firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(()=>{status='offline';sy()})}
@@ -175,6 +205,6 @@ document.addEventListener('change',e=>{
   if(e.target.classList.contains('hn')){const h=S.habits.find(x=>x.id==e.target.dataset.h),v=e.target.value.trim();if(h&&v){h.name=v;S.mh.forEach(x=>{if(x.h==h.id)x.name=v});save()}}
   if(e.target.id=='rf'){S.notes=S.notes||{};S.notes[ds(cur).slice(0,7)]=e.target.value;save()}
   if(e.target.id=='fi'){const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const j=JSON.parse(t);if(!Array.isArray(j.habits))throw 0;if(confirm('Replace current data with this backup?')){S=j;save()}}catch(x){alert('This is not a valid backup file.')}})}});
-document.documentElement.dataset.t=localStorage.getItem('ht_theme')||'';
+{const th=localStorage.getItem('ht_theme');document.documentElement.dataset.t=th===null?'dark':th}
 render();initFB();
 </script></body></html>
